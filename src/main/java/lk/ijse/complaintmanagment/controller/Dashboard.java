@@ -4,10 +4,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.*;
 import lk.ijse.complaintmanagment.model.Complain;
 import lk.ijse.complaintmanagment.dto.StatusCount;
 import lk.ijse.complaintmanagment.dao.ComplainDAO;
@@ -26,7 +23,12 @@ public class Dashboard extends HttpServlet {
         ServletContext context = getServletContext();
         try {
             String sql = "DELETE FROM complaints WHERE id = ?";
-            ComplainDAO.updateAddDeleteComplaint(getServletContext(), sql, Integer.parseInt(complainID));
+            int status = ComplainDAO.updateAddDeleteComplaint(getServletContext(), sql, Integer.parseInt(complainID));
+            if (status > 0) {
+                System.out.println("Complaint with ID " + complainID + " deleted successfully.");
+            } else {
+                System.out.println("No complaint found with ID " + complainID);
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -58,7 +60,6 @@ public class Dashboard extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("text/html");
         //TODO: useslata wena wenama data load wenna hadanna methanin role eka anuwa
-        Cookie[] cookies = req.getCookies();
         ServletContext context = getServletContext();
         BasicDataSource dataSource = (BasicDataSource) context.getAttribute("ds");
         String complainID = req.getParameter("complainID");
@@ -67,11 +68,12 @@ public class Dashboard extends HttpServlet {
             deleteComplaint(complainID);
             req.setAttribute("message", complainID + " Complaint Deleted Successfully");
         }
-        DecodedJWT decodedJWT = JWTUtil.decodeToken(cookies);
-        //System.out.println("Decoded JWT: " + decodedJWT);
+        HttpSession session = req.getSession();
+        String role = (String) session.getAttribute("role");
+        String userID = (String) session.getAttribute("user");
         try {
             Connection connection = dataSource.getConnection();
-            if (decodedJWT.getClaim("role").asString().equals("ADMIN")) {
+            if (role.equals("ADMIN")) {
 
                 String sql_complaint = "SELECT * FROM complaints";
                 List<Complain> complaintList = ComplainDAO.getComplains(getServletContext(), sql_complaint);
@@ -83,7 +85,7 @@ public class Dashboard extends HttpServlet {
                 req.getRequestDispatcher("/admin/dashboard.jsp").forward(req, resp);
             }else{
                 String sql_complaint = "SELECT * FROM complaints WHERE user_id = ?";
-                List<Complain> complaintList = ComplainDAO.getComplains(getServletContext(), sql_complaint, decodedJWT.getSubject());
+                List<Complain> complaintList = ComplainDAO.getComplains(getServletContext(), sql_complaint, userID);
                 StatusCount statusCount = getComplaintStatusCount(complaintList);
                 req.setAttribute("statusCount", statusCount);
                 req.setAttribute("complaintList", complaintList);

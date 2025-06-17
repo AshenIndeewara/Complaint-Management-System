@@ -20,22 +20,22 @@
 %>
 
 <!-- Header -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-success">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
     <div class="container-fluid">
             <span class="navbar-brand mb-0 h1">
                 <i class="fas fa-clipboard-list me-2"></i>
                 Complaint Management System
             </span>
         <div class="d-flex">
-            <a href="manageusers" class="btn btn-light me-2">
-                <i class="fas fa-plus me-1"></i>Users Management
+            <a href="addComplaint.jsp" class="btn btn-light me-2">
+                <i class="fas fa-plus me-1"></i>Add Complaint
             </a>
             <a href="logout" class="btn btn-light me-2">
                 <i class="fas fa-sign-out-alt me-1"></i>Logout
             </a>
             <span class="badge bg-secondary fs-6 d-flex align-items-center">
-                    <i class="fas fa-user-shield me-1"></i>Admin Panel
-            </span>
+                    <i class="fas fa-user-shield me-1"></i>Employee Panel
+                </span>
         </div>
     </div>
 </nav>
@@ -63,7 +63,7 @@
                             <h3 class="card-title text-warning"><%= statusCount.getPENDING() %></h3>
                             <p class="card-text text-muted">Pending</p>
                         </div>
-                    </div>
+          zzzzz          </div>
                 </div>
                 <div class="col-md-3 col-sm-6 mb-3">
                     <div class="card text-center border-info">
@@ -136,10 +136,9 @@
                             </thead>
                             <tbody id="complaintsTableBody">
                             <% if (complaints != null && !complaints.isEmpty()) {
-                                for (Complain c : complaints) {
-                                    id++;
-                            %>
+                                for (Complain c : complaints) { %>
                             <tr>
+                                <% id++; %>
                                 <td><%= id %></td>
                                 <td><%= c.getTitle() %></td>
                                 <td><%= c.getDescription() %></td>
@@ -156,11 +155,6 @@
                                     <a href="addComplaint?complainID=<%= c.getId() %>"
                                        class="btn btn-primary btn-sm me-1">
                                         <i class="fas fa-edit"></i> Edit
-                                    </a>
-                                    <a href="dashboard?complainID=<%= c.getId() %>"
-                                       class="btn btn-danger btn-sm"
-                                       onclick="return confirm('Are you sure you want to delete this complaint?')">
-                                        <i class="fas fa-trash"></i> Delete
                                     </a>
                                 </td>
                             </tr>

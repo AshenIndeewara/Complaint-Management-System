@@ -4,10 +4,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.*;
 import lk.ijse.complaintmanagment.dao.ComplainDAO;
 import lk.ijse.complaintmanagment.model.Complain;
 import lk.ijse.complaintmanagment.util.JWTUtil;
@@ -30,9 +27,9 @@ public class AddComplaint extends HttpServlet {
         ServletContext context = getServletContext();
         BasicDataSource dataSource = (BasicDataSource) context.getAttribute("ds");
 
-        Cookie [] cookies = req.getCookies();
-        DecodedJWT decodedJWT = JWTUtil.decodeToken(cookies);
-        String created_by = decodedJWT.getSubject();
+        HttpSession session = req.getSession();
+        String created_by = (String) session.getAttribute("user");
+        String role = (String) session.getAttribute("role");
 
         String description = req.getParameter("description");
         String remark = req.getParameter("remark");
@@ -47,7 +44,7 @@ public class AddComplaint extends HttpServlet {
                 Connection connection = dataSource.getConnection();
                 String sql;
                 int rowsAffected;
-                if (decodedJWT.getClaim("role").asString().equals("EMPLOYEE")) {
+                if (role.equals("EMPLOYEE")) {
                     sql = "UPDATE complaints SET title = ?, description = ?, created_at = ?, status = ? WHERE id = ?";
                     rowsAffected = ComplainDAO.updateAddDeleteComplaint(
                             getServletContext(),
@@ -72,7 +69,7 @@ public class AddComplaint extends HttpServlet {
                 if (rowsAffected > 0) {
                     System.out.println("Complaint updated successfully.");
                     String message = "Complaint updated successfully.";
-                    if (decodedJWT.getClaim("role").asString().equals("EMPLOYEE")) {
+                    if (role.equals("EMPLOYEE")) {
                         message = "Complaint updated successfully. Please wait for admin approval.";
                     }
                     req.getSession().setAttribute("message", message);
@@ -112,8 +109,9 @@ public class AddComplaint extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String complainID = req.getParameter("complainID");
         System.out.println("Complain ID: " + complainID);
-        Cookie [] cookies = req.getCookies();
-        DecodedJWT decodedJWT = JWTUtil.decodeToken(cookies);
+        HttpSession session = req.getSession();
+        String userID = (String) session.getAttribute("user");
+        String role = (String) session.getAttribute("role");
 
         if (complainID == null || complainID.isEmpty()) {
             System.out.println("No Complain ID provided, forwarding to addComplaint.jsp");
@@ -128,12 +126,12 @@ public class AddComplaint extends HttpServlet {
                 resp.getWriter().println("Complaint not found.");
                 return;
             }
-            if (!decodedJWT.getSubject().equals(complain.getUser_id()) && !decodedJWT.getClaim("role").asString().equals("ADMIN")) {
+            if (!userID.equals(complain.getUser_id()) && !role.equals("ADMIN")) {
                 resp.getWriter().println("You are not authorized to view this complaint.");
                 return;
             }
             req.setAttribute("complain", complain);
-            if(decodedJWT.getClaim("role").asString().equals("ADMIN")) {
+            if(role.equals("ADMIN")) {
                 req.getRequestDispatcher("/admin/editComplaint.jsp").forward(req, resp);
             } else {
                 req.getRequestDispatcher("/addComplaint.jsp").forward(req, resp);
