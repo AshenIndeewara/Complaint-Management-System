@@ -6,6 +6,7 @@ import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
@@ -31,20 +32,29 @@ public class CookiesCheck implements Filter {
             return;
         }
 
-        Cookie[] cookies = req.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("jwt".equals(cookie.getName())) {
-                    String jwt = cookie.getValue();
-                    DecodedJWT decodedJWT = JWTUtil.decodeToken(jwt);
-                    if (decodedJWT != null) {
-                        chain.doFilter(request, response);
-                        return;
-                    } else {
-                        System.out.println("Invalid JWT token.");
-                    }
-                }
-            }
+//        Cookie[] cookies = req.getCookies();
+//        if (cookies != null) {
+//            for (Cookie cookie : cookies) {
+//                if ("jwt".equals(cookie.getName())) {
+//                    String jwt = cookie.getValue();
+//                    DecodedJWT decodedJWT = JWTUtil.decodeToken(jwt);
+//                    if (decodedJWT != null) {
+//                        chain.doFilter(request, response);
+//                        return;
+//                    } else {
+//                        System.out.println("Invalid JWT token.");
+//                    }
+//                }
+//            }
+//        }
+        HttpSession session = req.getSession();
+        String role = (String) session.getAttribute("role");
+        String userId = (String) session.getAttribute("user");
+        if (role != null && userId != null) {
+            // Valid session, proceed with the request
+            System.out.println("Valid session found. User ID: " + userId + ", Role: " + role);
+            chain.doFilter(request, response);
+            return;
         }
         System.out.println("No valid session. Redirecting to login.");
         resp.sendRedirect(req.getContextPath() + "/login.jsp");

@@ -4,10 +4,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.*;
 import lk.ijse.complaintmanagment.model.Complain;
 import lk.ijse.complaintmanagment.dto.StatusCount;
 import lk.ijse.complaintmanagment.dao.ComplainDAO;
@@ -67,11 +64,14 @@ public class Dashboard extends HttpServlet {
             deleteComplaint(complainID);
             req.setAttribute("message", complainID + " Complaint Deleted Successfully");
         }
-        DecodedJWT decodedJWT = JWTUtil.decodeToken(cookies);
+        //DecodedJWT decodedJWT = JWTUtil.decodeToken(cookies);
         //System.out.println("Decoded JWT: " + decodedJWT);
+        HttpSession session = req.getSession();
+        String role = (String) session.getAttribute("role");
+        String userID = (String) session.getAttribute("user");
         try {
             Connection connection = dataSource.getConnection();
-            if (decodedJWT.getClaim("role").asString().equals("ADMIN")) {
+            if (role.equals("ADMIN")) {
 
                 String sql_complaint = "SELECT * FROM complaints";
                 List<Complain> complaintList = ComplainDAO.getComplains(getServletContext(), sql_complaint);
@@ -83,7 +83,7 @@ public class Dashboard extends HttpServlet {
                 req.getRequestDispatcher("/admin/dashboard.jsp").forward(req, resp);
             }else{
                 String sql_complaint = "SELECT * FROM complaints WHERE user_id = ?";
-                List<Complain> complaintList = ComplainDAO.getComplains(getServletContext(), sql_complaint, decodedJWT.getSubject());
+                List<Complain> complaintList = ComplainDAO.getComplains(getServletContext(), sql_complaint, userID);
                 StatusCount statusCount = getComplaintStatusCount(complaintList);
                 req.setAttribute("statusCount", statusCount);
                 req.setAttribute("complaintList", complaintList);

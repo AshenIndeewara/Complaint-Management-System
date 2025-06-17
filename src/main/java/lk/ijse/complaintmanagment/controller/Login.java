@@ -3,10 +3,7 @@ package lk.ijse.complaintmanagment.controller;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.*;
 import lk.ijse.complaintmanagment.dao.UserDAO;
 import lk.ijse.complaintmanagment.model.User;
 import lk.ijse.complaintmanagment.util.JWTUtil;
@@ -35,15 +32,12 @@ public class Login extends HttpServlet {
                 return;
             }
             if(UserIDQrEncryption.decrypt(password, user.getPassword())){
-                String role = user.getRole();
-                int userId = Integer.parseInt(user.getId());
-                Cookie cookie = new Cookie("jwt", JWTUtil.generateToken(String.valueOf(userId), username, role));
-                cookie.setMaxAge(60 * 60 * 24);
-                cookie.setPath("/");
-                resp.addCookie(cookie);
-                if ("ADMIN".equals(role)) {
+                HttpSession session = req.getSession();
+                session.setAttribute("user", user.getId());
+                session.setAttribute("role", user.getRole());
+                if ("ADMIN".equals(user.getRole())) {
                     resp.sendRedirect(req.getContextPath() + "/dashboard");
-                } else if ("EMPLOYEE".equals(role)) {
+                } else if ("EMPLOYEE".equals(user.getRole())) {
                     resp.sendRedirect(req.getContextPath() + "/dashboard");
                 } else {
                     resp.getWriter().println("Invalid role.");

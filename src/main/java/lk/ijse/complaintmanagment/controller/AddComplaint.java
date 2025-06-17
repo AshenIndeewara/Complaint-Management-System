@@ -4,10 +4,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.*;
 import lk.ijse.complaintmanagment.dao.ComplainDAO;
 import lk.ijse.complaintmanagment.model.Complain;
 import lk.ijse.complaintmanagment.util.JWTUtil;
@@ -30,9 +27,12 @@ public class AddComplaint extends HttpServlet {
         ServletContext context = getServletContext();
         BasicDataSource dataSource = (BasicDataSource) context.getAttribute("ds");
 
-        Cookie [] cookies = req.getCookies();
-        DecodedJWT decodedJWT = JWTUtil.decodeToken(cookies);
-        String created_by = decodedJWT.getSubject();
+//        Cookie [] cookies = req.getCookies();
+//        DecodedJWT decodedJWT = JWTUtil.decodeToken(cookies);
+//        String created_by = decodedJWT.getSubject();
+        HttpSession session = req.getSession();
+        String created_by = (String) session.getAttribute("user");
+        String role = (String) session.getAttribute("role");
 
         String description = req.getParameter("description");
         String remark = req.getParameter("remark");
@@ -47,7 +47,7 @@ public class AddComplaint extends HttpServlet {
                 Connection connection = dataSource.getConnection();
                 String sql;
                 int rowsAffected;
-                if (decodedJWT.getClaim("role").asString().equals("EMPLOYEE")) {
+                if (role.equals("EMPLOYEE")) {
                     sql = "UPDATE complaints SET title = ?, description = ?, created_at = ?, status = ? WHERE id = ?";
                     rowsAffected = ComplainDAO.updateAddDeleteComplaint(
                             getServletContext(),
@@ -72,7 +72,7 @@ public class AddComplaint extends HttpServlet {
                 if (rowsAffected > 0) {
                     System.out.println("Complaint updated successfully.");
                     String message = "Complaint updated successfully.";
-                    if (decodedJWT.getClaim("role").asString().equals("EMPLOYEE")) {
+                    if (role.equals("EMPLOYEE")) {
                         message = "Complaint updated successfully. Please wait for admin approval.";
                     }
                     req.getSession().setAttribute("message", message);
