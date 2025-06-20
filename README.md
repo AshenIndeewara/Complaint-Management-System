@@ -78,26 +78,11 @@ README.md
    - Deploy on Tomcat server
    - Visit: `http://localhost:8080/cms/`
 
-## 🎬 Demonstration Video
-
-YouTube Title Format:
-```
-JakartaEE Project 2025 - IJSE 72 Ashen Indeewara Galle
-```
 
 The demo video includes:
 - System features (Login, Complaint Flow, User Management)
 - Architecture overview (MVC)
 - Explanation of form-based GET/POST flows
-
-## 📄 Submission Info
-
-- **GitHub Repo:** Public with full codebase and documentation
-- **Video Link:** Unlisted or public YouTube link
-- **Email Subject:**
-  ```
-  [GDSE72-JakartaEE2025] - Ashen Indeewara - Assignment Submission
-  ```
 
 ## 🛡️ Academic Integrity
 
